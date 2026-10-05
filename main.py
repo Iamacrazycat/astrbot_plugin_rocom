@@ -41,7 +41,7 @@ from .core.wiki_catalog import (
     WIKI_CATALOG_ROUTES_BY_KEY,
 )
 
-@register("astrbot_plugin_rocom", "bvzrays & 熵增项目组", "洛克王国插件", "v4.3.0", "https://github.com/Entropy-Increase-Team/astrbot_plugin_rocom")
+@register("astrbot_plugin_rocom", "bvzrays & 熵增项目组", "洛克王国插件", "v4.3.1", "https://github.com/Entropy-Increase-Team/astrbot_plugin_rocom")
 class RocomPlugin(Star):
     _BACKGROUND_REGISTRY_KEY = "_astrbot_plugin_rocom_background_tasks"
 
@@ -2505,21 +2505,37 @@ class RocomPlugin(Star):
         product_names = {p.get("name", "") for p in products}
         allday_names = self._merchant_allday_names(products) if self.merchant_all_day_once_enabled else set()
         today_key = round_info["date"]
+        logger.info(
+            f"[Rocom] 远行商人订阅检查 {round_info['round_id']}："
+            f"在售 {len(products)} 项 [{', '.join(sorted(n for n in product_names if n))}]，"
+            f"全天商品 [{', '.join(sorted(allday_names))}]，订阅 {len(all_subs)} 个"
+        )
         pending_pushes = []
         for key, sub in all_subs.items():
             items = sub.get("items") or self.merchant_subscription_items
             matched = [name for name in items if name in product_names]
             if allday_names:
                 pushed_today = self._merchant_allday_pushed_names(sub, today_key)
+                before_dedup = list(matched)
                 matched = [
                     name
                     for name in matched
                     if not (name in allday_names and name in pushed_today)
                 ]
-            if not matched or sub.get("last_push_round") == round_info["round_id"]:
+                dropped = [name for name in before_dedup if name not in matched]
+                if dropped:
+                    logger.debug(
+                        f"[Rocom] 订阅 {key}：全天商品 {dropped} 今日已推送过，跳过"
+                    )
+            if not matched:
+                logger.debug(f"[Rocom] 订阅 {key}：本轮未命中（监听 {items}）")
+                continue
+            if sub.get("last_push_round") == round_info["round_id"]:
+                logger.debug(f"[Rocom] 订阅 {key}：本轮已推送过，跳过")
                 continue
             pending_pushes.append((key, sub, matched))
         if not pending_pushes:
+            logger.debug("[Rocom] 远行商人本轮无待推送订阅")
             return "done"
         img_url = None
         try:
@@ -2556,6 +2572,10 @@ class RocomPlugin(Star):
             if allday_names:
                 self._record_allday_pushed(sub, today_key, [n for n in matched if n in allday_names])
             await self.merchant_sub_mgr.upsert_subscription(key, sub)
+            logger.info(
+                f"[Rocom] 远行商人订阅推送成功：{matched} → {key}"
+                f"（轮次 {round_info['round_id']}）"
+            )
             await asyncio.sleep(5)
         return "done"
 

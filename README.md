@@ -11,7 +11,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/Entropy-Increase-Team/astrbot_plugin_rocom?style=for-the-badge\&color=45B7D1)](https://github.com/Entropy-Increase-Team/astrbot_plugin_rocom/issues)
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-FFc65f?style=for-the-badge\&logo=python)](https://github.com/Soulter/AstrBot)
 
-### 🚀 基于 WeGame API & 洛克王国数据 的查询工具 v4.3.0
+### 🚀 基于 WeGame API & 洛克王国数据 的查询工具 v4.3.1
 
 ### 扫码绑定 · 家园查询 · 精灵排行榜 · 阵容码解析 · Wiki 图鉴 · 查蛋配种
 
@@ -303,6 +303,11 @@ astrbot_plugin_rocom/
 
 <details>
 <summary>点击展开版本历史</summary>
+
+### v4.3.1 (2026-10-05)
+
+#### 修复
+- 补充远行商人订阅检查全链路日志：每次检查记录轮次、在售商品、全天商品与订阅数；未命中、全天每日一推去重、同轮重复推送的跳过原因记为 DEBUG；推送成功记录命中商品与目标会话。此前检查过程零日志，出现"在售但未推送"时无法追溯。
 
 ### v4.3.0 (2026-10-02)
 
